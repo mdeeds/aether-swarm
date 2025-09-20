@@ -92,6 +92,9 @@ export class Agent {
       throw new Error('API key not loaded.');
     }
 
+    // TODO: If we have a pending `post`, we really should wait until we finish handling that one
+    // and add its response to the chat history before we process a new one.
+
     this.chatHistory.push({ role: 'user', parts: [{ text: message }] });
 
     let data = await this.#callGemini();
