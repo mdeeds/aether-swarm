@@ -1,21 +1,23 @@
 // @ts-check
 import { Agent } from './agent.js';
+import { Names } from './names.js';
+import { MessageTool } from './message-tool.js';
+
 
 /**
- * Main initialization function.
- */
-async function main() {
-  const agent = new Agent();
+* Creates the chat UI elements and returns the main container.
+* @param {Agent} agent The agent instance to interact with.
+* @returns {HTMLDivElement} The main chat container element.
+*/
+function createChatUI(agent) {
   // The constructor already starts loading the API key.
   // We can proceed with creating the UI.
 
   const chatContainer = document.createElement('div');
   chatContainer.id = 'chat-container';
-  document.body.appendChild(chatContainer);
 
   const inputContainer = document.createElement('div');
   inputContainer.id = 'input-container';
-  document.body.appendChild(inputContainer);
 
   const inputDiv = document.createElement('div');
   inputDiv.contentEditable = 'true';
@@ -61,6 +63,33 @@ async function main() {
     messageDiv.textContent = text;
     chatContainer.appendChild(messageDiv);
     chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to bottom
+  }
+
+  // The parent element will contain both the chat and input areas.
+  const parentDiv = document.createElement('div');
+  parentDiv.appendChild(chatContainer);
+  parentDiv.appendChild(inputContainer);
+  return parentDiv;
+}
+
+/**
+ * Main initialization function.
+ */
+async function main() {
+  const agents = [];
+  const messageTool = new MessageTool();
+  for (let i = 0; i < 2; ++i) {
+    const name = Names.nextName();
+    const systemInstructions = `Your name is ${name}.}`;
+    const agent = new Agent(systemInstructions);
+    agents.push(agent);
+    messageTool.addAgent(name, agent);
+    agent.addTool(messageTool);
+  }
+
+  for (const agent of agents) {
+    const chatUI = createChatUI(agent);
+    document.body.appendChild(chatUI);
   }
 }
 

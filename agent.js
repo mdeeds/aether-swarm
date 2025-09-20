@@ -1,10 +1,12 @@
 // @ts-check
+import { MessageTool } from './message-tool.js';
+/** @typedef {import('./tool.js').Tool} ITool */
 
 /**
  * @typedef {{
  *   role: 'user' | 'model';
  *   parts: { text: string }[];
- * }} ChatMessage
+ * } | { role: 'tool', parts: { functionResponse: { name: string, response: any }}[]}} ChatMessage
  */
 
 export class Agent {
@@ -12,9 +14,24 @@ export class Agent {
   #apiKey = null;
   /** @type {ChatMessage[]} */
   chatHistory = [];
+  /** @type {string | null} */
+  #systemInstructions = null;
+  /** @type {Map<string, ITool>} */
+  tools;
 
-  constructor() {
+  /** @param {string} [systemInstructions] */
+  constructor(systemInstructions) {
+    if (!systemInstructions) {
+      throw new Error('System instructions are required.');
+    }
     this.loadApiKey();
+    this.tools = new Map();
+    this.#systemInstructions = systemInstructions;
+  }
+
+  /** @param {ITool} tool */
+  addTool(tool) {
+    this.tools.set(tool.declaration.name, tool);
   }
 
   async loadApiKey() {
@@ -31,6 +48,41 @@ export class Agent {
   }
 
   /**
+   * Calls the Gemini API with the current chat history and tools.
+   * @returns {Promise<any>} The JSON response from the API.
+   */
+  async #callGemini() {
+    if (!this.#apiKey) {
+      throw new Error('API key not loaded.');
+    }
+    if (!this.#systemInstructions) {
+      throw new Error('System instructions not set.');
+    }
+
+    // Documentation: https://aistudio.google.com/welcome
+    // https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.#apiKey}`;
+
+    const toolDeclarations = Array.from(this.tools.values()).map(tool => tool.declaration);
+    const body = {
+      contents: this.chatHistory,
+      system_instruction: { parts: [{ text: this.#systemInstructions }] },
+      tools: [{ function_declarations: toolDeclarations }],
+    };
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      throw new Error(`API call failed with status: ${response.statusText}`);
+    }
+    return response.json();
+  }
+
+  /**
    * Sends a message to the Gemini API and updates the chat history.
    * @param {string} message The message to send.
    * @returns {Promise<string>} The text response from Gemini.
@@ -42,21 +94,34 @@ export class Agent {
 
     this.chatHistory.push({ role: 'user', parts: [{ text: message }] });
 
-    // Documentation: https://aistudio.google.com/welcome
-    // https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.#apiKey}`;
+    let data = await this.#callGemini();
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: this.chatHistory }),
-    });
-
-    const data = await response.json();
-    const modelResponse = data.candidates[0].content;
-    const responseText = modelResponse.parts[0].text;
-
+    let modelResponse = data.candidates[0].content;
     this.chatHistory.push(modelResponse);
-    return responseText;
+
+    // Handle function calls if the model requests them
+    while (modelResponse.parts.some(part => 'functionCall' in part)) {
+      const functionCallPart = modelResponse.parts.find(part => 'functionCall' in part);
+      if (!functionCallPart || !functionCallPart.functionCall) continue;
+
+      const { name, args } = functionCallPart.functionCall;
+      const tool = this.tools.get(name);
+      if (tool) {
+        const toolResult = await tool.run(args);
+        this.chatHistory.push({
+          role: 'tool',
+          parts: [{ functionResponse: { name, response: { content: toolResult } } }]
+        });
+
+        // Call Gemini again with the tool's response
+        data = await this.#callGemini();
+        modelResponse = data.candidates[0].content;
+        this.chatHistory.push(modelResponse);
+      }
+    }
+
+    // Return the final text response
+    const finalResponsePart = modelResponse.parts.find(part => 'text' in part);
+    return finalResponsePart?.text ?? "No text response received.";
   }
 }
