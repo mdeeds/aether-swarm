@@ -22,9 +22,13 @@ export class MessageTool {
         text: {
           type: 'STRING',
           description: 'The content of the message.'
+        },
+        fromName: {
+          type: 'STRING',
+          description: 'The name and role of the sender of the message.'
         }
       },
-      required: ['name', 'text']
+      required: ['name', 'text', 'fromName']
     }
   }
 
@@ -44,16 +48,19 @@ export class MessageTool {
 
   /**
    * Executes the message tool, sending a message to a specified agent.
-   * @param {{ name: string; text: string; }} args The arguments for the tool call.
+   * @param {{ name: string; text: string; fromName: string}} args The arguments for the tool call.
    * @returns {Promise<string>} The response from the called agent.
    */
-  async run({ name, text }) {
+  async run({ name, text, fromName }) {
+    if (!fromName) {
+      throw new Error('fromName is required.');
+    }
     const agent = this.agents.get(name);
     if (!agent) {
       return `Error: Agent with name '${name}' not found.`;
     }
     console.log(`Routing message to ${name}: "${text}"`);
-    const response = await agent.postMessage(text);
+    const response = await agent.postMessage(text, fromName);
     return response;
   }
 }

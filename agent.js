@@ -147,7 +147,7 @@ export class Agent {
    * @param {string} message The message to send.
    * @returns {Promise<string>} The text response from Gemini.
    */
-  async postMessage(message) {
+  async postMessage(message, fromName) {
     if (!this.#apiKey) {
       throw new Error('API key not loaded.');
     }
@@ -155,7 +155,7 @@ export class Agent {
     // TODO: If we have a pending `post`, we really should wait until we finish handling that one
     // and add its response to the chat history before we process a new one.
 
-    this.chatHistory.push({ role: 'user', parts: [{ text: message }] });
+    this.pushChatHistory({ role: 'user', parts: [{ text: `${fromName}: ${message}` }] });
 
     let data;
     let retries = 3;

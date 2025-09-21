@@ -13,15 +13,15 @@ if it can be specified as the input and output of a set of functions, we can bui
 
 ### `message`
 
-Usage: `message(name, text)`
+Usage: `message(name, text, fromName)`
 
-Sends the message `text` to the agent with the name `name`.
+Sends the message `text` to the agent with the name `name`.  `fromName` must be populated with your name and role.
 
 ### `broadcast`
 
-Usage `broadcast(text)`
+Usage `broadcast(text, fromName)`
 
-Sends the message `text` to all agents.
+Sends the message `text` to all agents.  Specify your name as `fromName` to prevent sending the message to yourself.
 
 ### `hire`
 

@@ -22,8 +22,12 @@ export class BroadcastTool {
           type: 'STRING',
           description: 'The content of the message to broadcast.',
         },
+        fromName: {
+          type: 'STRING',
+          description: 'The name of the agent broadcasting the message.',
+        },
       },
-      required: ['text'],
+      required: ['text', 'fromName'],
     },
   };
 
@@ -39,13 +43,18 @@ export class BroadcastTool {
 
   /**
    * Executes the broadcast.
-   * @param {{ text: string }} args - The message text to broadcast.
+   * @param {{ text: string, fromName: string }} args - The message text to broadcast.
    * @returns {Promise<string>} A string containing the concatenated responses from all agents.
    */
   async run(args) {
-    const { text } = args;
-    const agentNames = Array.from(this.#messageTool.agents.keys());
-    const promises = agentNames.map(name => this.#messageTool.run({ name, text }));
+    const { text, fromName } = args;
+    if (!fromName) {
+      throw new Error('fromName is required.');
+    }
+    const agentNames = Array.from(this.#messageTool.agents.keys()).filter(
+      name => !fromName.startsWith(name)
+    );
+    const promises = agentNames.map(name => this.#messageTool.run({ name, text, fromName }));
     const responses = await Promise.all(promises);
     return agentNames.map((name, i) => `${name}: ${responses[i]}\n`).join('\n');
   }
