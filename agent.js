@@ -16,6 +16,8 @@ export class Agent {
   #apiKey = null;
   /** @type {ChatMessage[]} */
   chatHistory = [];
+  /** @type {HTMLElement} */
+  #chatHistoryDiv;
   /** @type {string | null} */
   #staticSystemInstructions = null;
   /** @type {Map<string, Tool>} */
@@ -30,8 +32,9 @@ export class Agent {
    * @param {string} name 
    * @param {string} role
    * @param {string} systemInstructions
+   * @param {HTMLElement} chatHistoryDiv
   */
-  constructor(name, role, systemInstructions) {
+  constructor(name, role, systemInstructions, chatHistoryDiv) {
     if (!name) {
       throw new Error('Name is required.');
     }
@@ -41,9 +44,13 @@ export class Agent {
     if (!systemInstructions) {
       throw new Error('System instructions are required.');
     }
+    if (!chatHistoryDiv) {
+      throw new Error('Chat history container is required.');
+    }
     this.loadApiKey();
     this.name = name;
     this.role = role;
+    this.#chatHistoryDiv = chatHistoryDiv;
     this.#staticSystemInstructions = systemInstructions;
   }
 
@@ -122,6 +129,13 @@ export class Agent {
     return response.json();
   }
 
+  pushChatHistory(part) {
+    this.chatHistory.push(part);
+    const json = JSON.stringify(this.chatHistory, null, 2);
+    const jsonWithNewlines = json.replace(/\\n/g, '\n');
+    this.#chatHistoryDiv.innerText = jsonWithNewlines;
+  }
+
   /**
    * @param {number} ms
    * @returns {Promise<void>}
@@ -168,7 +182,7 @@ export class Agent {
     }
 
     let modelResponse = data.candidates[0].content;
-    this.chatHistory.push(modelResponse);
+    this.pushChatHistory(modelResponse);
 
     // Handle function calls if the model requests them
     while (modelResponse.parts.some(part => 'functionCall' in part)) {
@@ -179,7 +193,7 @@ export class Agent {
       const tool = this.#tools.get(name);
       if (!tool) {
         console.error(`${this.name}, ${this.role} is attempting to use tool '${name}', but this is not permitted.`);
-        this.chatHistory.push({
+        this.pushChatHistory({
           role: 'tool',
           parts: [{
             functionResponse: {
@@ -193,10 +207,10 @@ export class Agent {
         // Call Gemini again with the tool's response
         data = await this.#callGemini();
         modelResponse = data.candidates[0].content;
-        this.chatHistory.push(modelResponse);
+        this.pushChatHistory(modelResponse);
       } else {
         const toolResult = await tool.run(args);
-        this.chatHistory.push({
+        this.pushChatHistory({
           role: 'tool',
           parts: [{ functionResponse: { name, response: { content: toolResult } } }]
         });
@@ -204,7 +218,7 @@ export class Agent {
         // Call Gemini again with the tool's response
         data = await this.#callGemini();
         modelResponse = data.candidates[0].content;
-        this.chatHistory.push(modelResponse);
+        this.pushChatHistory(modelResponse);
       }
     }
 

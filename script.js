@@ -33,15 +33,15 @@ function createChatUI(agent) {
     const message = inputDiv.textContent?.trim();
     if (!message) return;
 
-    addMessageToChat('user', message);
+    // addMessageToChat('user', message);
     inputDiv.textContent = ''; // Clear input
 
     try {
       const responseText = await agent.postMessage(message);
-      addMessageToChat('model', responseText);
+      // addMessageToChat('model', responseText);
     } catch (error) {
       console.error('Error sending message:', error);
-      addMessageToChat('error', `Error: ${error.message}`);
+      // addMessageToChat('error', `Error: ${error.message}`);
     }
   };
 
@@ -76,7 +76,16 @@ function createChatUI(agent) {
  * Main initialization function.
  */
 async function main() {
-  const ceo = await AgentFactory.createAgent('Ceo', Hats.randomColor());
+  const chats = document.createElement('div');
+  chats.id = 'chats';
+  document.body.appendChild(chats);
+  if (!chats) {
+    throw new Error('Chats container not found.');
+  }
+  const chatHistoryDiv = document.createElement('div');
+  chats.appendChild(chatHistoryDiv);
+
+  const ceo = await AgentFactory.createAgent('Ceo', Hats.randomColor(), chatHistoryDiv);
   const chatUI = createChatUI(ceo);
   document.body.appendChild(chatUI);
 }

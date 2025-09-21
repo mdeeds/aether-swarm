@@ -38,7 +38,15 @@ export class HireTool {
    */
   async run(args) {
     const { role, hat } = args;
-    const newAgent = await AgentFactory.createAgent(role, hat);
+
+    const chats = document.getElementById('chats');
+    if (!chats) {
+      throw new Error('Chats container not found.');
+    }
+    const chatHistoryDiv = document.createElement('div');
+    chats.appendChild(chatHistoryDiv);
+
+    const newAgent = await AgentFactory.createAgent(role, hat, chatHistoryDiv);
     return `You have successfully hired ${newAgent.name} as the new ${newAgent.role}. You should now use the 'message' tool to welcome them.`;
   }
 }

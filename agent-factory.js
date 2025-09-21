@@ -15,11 +15,15 @@ export class AgentFactory {
   /**
    * @param {string} role
    * @param {string} hat
+   * @param {HTMLElement} chatHistoryDiv
    * @returns {Promise<Agent>}
    */
-  static async createAgent(role, hat) {
+  static async createAgent(role, hat, chatHistoryDiv) {
     if (!this.#toolsMd) {
       this.#toolsMd = await (await fetch('tools.md')).text();
+    }
+    if (!chatHistoryDiv) {
+      throw new Error('Chat history container is required.');
     }
 
     const name = Names.nextName();
@@ -36,7 +40,7 @@ export class AgentFactory {
     ${this.#toolsMd}
     `;
 
-    const agent = new Agent(name, role, systemInstructions);
+    const agent = new Agent(name, role, systemInstructions, chatHistoryDiv);
     ToolFactory.addToolsToNewAgent(agent);
     Directory.addAgent(agent);
 
