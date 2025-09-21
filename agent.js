@@ -1,6 +1,6 @@
 // @ts-check
 import { MessageTool } from './message-tool.js';
-/** @typedef {import('./tool.js').Tool} ITool */
+/** @typedef {import('./tool.js').Tool} Tool */
 
 /**
  * @typedef {{
@@ -16,22 +16,38 @@ export class Agent {
   chatHistory = [];
   /** @type {string | null} */
   #systemInstructions = null;
-  /** @type {Map<string, ITool>} */
-  tools;
+  /** @type {Map<string, Tool>} */
+  #tools = new Map();
+  /** @type {string} */
+  name;
+  /** @type {string} */
+  role;
 
-  /** @param {string} [systemInstructions] */
-  constructor(systemInstructions) {
+
+  /** 
+   * @param {string} name 
+   * @param {string} role
+   * @param {string} systemInstructions
+  */
+  constructor(name, role, systemInstructions) {
+    if (!name) {
+      throw new Error('Name is required.');
+    }
+    if (!role) {
+      throw new Error('Role is required.');
+    }
     if (!systemInstructions) {
       throw new Error('System instructions are required.');
     }
     this.loadApiKey();
-    this.tools = new Map();
+    this.name = name;
+    this.role = role;
     this.#systemInstructions = systemInstructions;
   }
 
-  /** @param {ITool} tool */
+  /** @param {Tool} tool */
   addTool(tool) {
-    this.tools.set(tool.declaration.name, tool);
+    this.#tools.set(tool.declaration.name, tool);
   }
 
   async loadApiKey() {
@@ -63,7 +79,7 @@ export class Agent {
     // https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.#apiKey}`;
 
-    const toolDeclarations = Array.from(this.tools.values()).map(tool => tool.declaration);
+    const toolDeclarations = Array.from(this.#tools.values()).map(tool => tool.declaration);
     const body = {
       contents: this.chatHistory,
       system_instruction: { parts: [{ text: this.#systemInstructions }] },
@@ -108,7 +124,7 @@ export class Agent {
       if (!functionCallPart || !functionCallPart.functionCall) continue;
 
       const { name, args } = functionCallPart.functionCall;
-      const tool = this.tools.get(name);
+      const tool = this.#tools.get(name);
       if (tool) {
         const toolResult = await tool.run(args);
         this.chatHistory.push({

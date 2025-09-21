@@ -2,6 +2,7 @@
 import { Agent } from './agent.js';
 import { Names } from './names.js';
 import { MessageTool } from './message-tool.js';
+import { AgentFactory } from './agent-factory.js';
 
 
 /**
@@ -76,21 +77,9 @@ function createChatUI(agent) {
  * Main initialization function.
  */
 async function main() {
-  const agents = [];
-  const messageTool = new MessageTool();
-  for (let i = 0; i < 2; ++i) {
-    const name = Names.nextName();
-    const systemInstructions = `Your name is ${name}.}`;
-    const agent = new Agent(systemInstructions);
-    agents.push(agent);
-    messageTool.addAgent(name, agent);
-    agent.addTool(messageTool);
-  }
-
-  for (const agent of agents) {
-    const chatUI = createChatUI(agent);
-    document.body.appendChild(chatUI);
-  }
+  const ceo = await AgentFactory.createAgent('Ceo', 'blue');
+  const chatUI = createChatUI(ceo);
+  document.body.appendChild(chatUI);
 }
 
 window.addEventListener('DOMContentLoaded', main);
