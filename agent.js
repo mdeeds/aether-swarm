@@ -93,17 +93,40 @@ export class Agent {
       tools: [{ function_declarations: toolDeclarations }],
     };
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
+    let retries = 3;
+    /** {Response | null } */
+    let response = null;
+    let delay = 3000;
+    while (retries > 0) {
+      try {
+        response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        break; // Success
+      } catch (error) {
+        console.log(error);
+        console.log(`Retrying in ${delay}ms...`);
+        await this.#sleep(delay);
+        delay *= 2;
+        --retries;
+      }
+    }
 
-    if (!response.ok) {
+    if (!response) {
+      throw new Error('No response from Gemini API.');
+    } else if (!response.ok) {
       throw new Error(`API call failed with status: ${response.statusText}`);
     }
     return response.json();
   }
+
+  /**
+   * @param {number} ms
+   * @returns {Promise<void>}
+   */
+  #sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
   /**
    * Sends a message to the Gemini API and updates the chat history.
@@ -120,7 +143,29 @@ export class Agent {
 
     this.chatHistory.push({ role: 'user', parts: [{ text: message }] });
 
-    let data = await this.#callGemini();
+    let data;
+    let retries = 3;
+    while (retries > 0) {
+      try {
+        data = await this.#callGemini();
+        break; // Success
+      } catch (error) {
+        if (error instanceof Response && error.status === 429) {
+          const errorBody = await error.json();
+          const retryInfo = errorBody.error?.details?.find(d => d['@type'] === 'type.googleapis.com/google.rpc.RetryInfo');
+          const delayString = retryInfo?.retryDelay;
+          if (delayString) {
+            const delaySeconds = parseFloat(delayString.replace('s', ''));
+            console.warn(`Rate limit exceeded. Retrying in ${delaySeconds} seconds...`);
+            await this.#sleep(delaySeconds * 1000);
+            retries--;
+            continue;
+          }
+        }
+        // For other errors or if retry info is not present, rethrow.
+        throw error;
+      }
+    }
 
     let modelResponse = data.candidates[0].content;
     this.chatHistory.push(modelResponse);
@@ -133,7 +178,7 @@ export class Agent {
       const { name, args } = functionCallPart.functionCall;
       const tool = this.#tools.get(name);
       if (!tool) {
-        console.error(`Tool '${name}' not found.`);
+        console.error(`${this.name}, ${this.role} is attempting to use tool '${name}', but this is not permitted.`);
         this.chatHistory.push({
           role: 'tool',
           parts: [{
