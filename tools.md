@@ -27,7 +27,17 @@ Sends the message `text` to all agents.
 
 Usage: `hire(role, hatColor)`
 
-Creates a new agent of the specified role with the specified hat color.  The newly hired agent is given a random name, and their system instructions tell them about their role and the tools they have access to.
+Creates a new agent of the specified role with the specified hat color.  These hat colors correspond to
+Bono's Six Thinking Hats:
+
+  * blue - process
+  * white - analytics
+  * red - emotions
+  * black - critical
+  * yellow - optimistic
+  * green - creative
+
+The newly hired agent is given a random name, and their system instructions tell them about their role and the tools they have access to.
 
 ### `listClasses`
 
