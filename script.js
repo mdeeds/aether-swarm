@@ -85,7 +85,9 @@ async function main() {
   const chatHistoryDiv = document.createElement('div');
   chats.appendChild(chatHistoryDiv);
 
-  const ceo = await AgentFactory.createAgent('Ceo', Hats.randomColor(), chatHistoryDiv);
+  // const color = Hats.randomColor();W
+  const color = 'red';  // Red is by far the most fun Ceo
+  const ceo = await AgentFactory.createAgent('Ceo', color, chatHistoryDiv);
   const chatUI = createChatUI(ceo);
   document.body.appendChild(chatUI);
 }

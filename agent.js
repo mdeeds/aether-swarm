@@ -147,7 +147,7 @@ export class Agent {
    * @param {string} message The message to send.
    * @returns {Promise<string>} The text response from Gemini.
    */
-  async postMessage(message, fromName) {
+  async postMessage(message) {
     if (!this.#apiKey) {
       throw new Error('API key not loaded.');
     }
@@ -155,7 +155,7 @@ export class Agent {
     // TODO: If we have a pending `post`, we really should wait until we finish handling that one
     // and add its response to the chat history before we process a new one.
 
-    this.pushChatHistory({ role: 'user', parts: [{ text: `${fromName}: ${message}` }] });
+    this.pushChatHistory({ role: 'user', parts: [{ text: message }] });
 
     let data;
     let retries = 3;
@@ -185,42 +185,48 @@ export class Agent {
     this.pushChatHistory(modelResponse);
 
     // Handle function calls if the model requests them
-    while (modelResponse.parts.some(part => 'functionCall' in part)) {
-      const functionCallPart = modelResponse.parts.find(part => 'functionCall' in part);
-      if (!functionCallPart || !functionCallPart.functionCall) continue;
+    if (!modelResponse.parts) {
+      this.pushChatHistory(modelResponse);
 
-      const { name, args } = functionCallPart.functionCall;
-      const tool = this.#tools.get(name);
-      if (!tool) {
-        console.error(`${this.name}, ${this.role} is attempting to use tool '${name}', but this is not permitted.`);
-        this.pushChatHistory({
-          role: 'tool',
-          parts: [{
-            functionResponse: {
-              name, response: {
-                content:
-                  `Error: Tool '${name}' not available.`
+    } else {
+      while (modelResponse.parts.some(part => 'functionCall' in part)) {
+        const functionCallPart = modelResponse.parts.find(part => 'functionCall' in part);
+        if (!functionCallPart || !functionCallPart.functionCall) continue;
+
+        const { name, args } = functionCallPart.functionCall;
+        const tool = this.#tools.get(name);
+        if (!tool) {
+          console.error(`${this.name}, ${this.role} is attempting to use tool '${name}', but this is not permitted.`);
+          this.pushChatHistory({
+            role: 'tool',
+            parts: [{
+              functionResponse: {
+                name, response: {
+                  content:
+                    `Error: Tool '${name}' not available.`
+                }
               }
-            }
-          }]
-        });
-        // Call Gemini again with the tool's response
-        data = await this.#callGemini();
-        modelResponse = data.candidates[0].content;
-        this.pushChatHistory(modelResponse);
-      } else {
-        const toolResult = await tool.run(args);
-        this.pushChatHistory({
-          role: 'tool',
-          parts: [{ functionResponse: { name, response: { content: toolResult } } }]
-        });
+            }]
+          });
+          // Call Gemini again with the tool's response
+          data = await this.#callGemini();
+          modelResponse = data.candidates[0].content;
+          this.pushChatHistory(modelResponse);
+        } else {
+          const toolResult = await tool.run(args);
+          this.pushChatHistory({
+            role: 'tool',
+            parts: [{ functionResponse: { name, response: { content: toolResult } } }]
+          });
 
-        // Call Gemini again with the tool's response
-        data = await this.#callGemini();
-        modelResponse = data.candidates[0].content;
-        this.pushChatHistory(modelResponse);
+          // Call Gemini again with the tool's response
+          data = await this.#callGemini();
+          modelResponse = data.candidates[0].content;
+          this.pushChatHistory(modelResponse);
+        }
       }
     }
+
 
     // Return the final text response
     const finalResponsePart = modelResponse.parts.find(part => 'text' in part);

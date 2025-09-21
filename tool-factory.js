@@ -1,6 +1,6 @@
 // @ts-check
 
-import { MessageTool } from './message-tool.js';
+import { MessageTool, PrefixMessageTool } from './message-tool.js';
 import { BroadcastTool } from './broadcast-tool.js';
 import { HireTool } from './hire-tool.js';
 import { Agent } from './agent.js';
@@ -41,19 +41,20 @@ export class ToolFactory {
     if (this.#knownAgents.has(agent.name)) {
       return;
     }
+    const messageTool = new PrefixMessageTool(this.#messageTool, agent);
     this.#messageTool.addAgent(agent.name, agent);
     this.#knownAgents.add(agent.name);
     switch (agent.role) {
       case 'Ceo':
-        agent.addTool(this.#messageTool);
+        agent.addTool(messageTool);
         agent.addTool(this.#broadcastTool);
         agent.addTool(this.#hireTool);
         break;
       case 'Project Manager':
-        agent.addTool(this.#messageTool);
+        agent.addTool(messageTool);
         break;
       case 'Coder':
-        agent.addTool(this.#messageTool)
+        agent.addTool(messageTool);
         break;
       default:
         throw new Error(`Unknown role: ${agent.role}`);
