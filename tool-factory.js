@@ -1,6 +1,7 @@
 // @ts-check
 
 import { MessageTool } from './message-tool.js';
+import { BroadcastTool } from './broadcast-tool.js';
 import { HireTool } from './hire-tool.js';
 import { Agent } from './agent.js';
 
@@ -15,10 +16,12 @@ export class ToolFactory {
   /** @type {Set<string>} */
   static #knownAgents = new Set();
   static #messageTool = new MessageTool();
+  static #broadcastTool = new BroadcastTool(this.#messageTool);
   static #hireTool = new HireTool();
 
   static {
     this.#registerTool(this.#messageTool);
+    this.#registerTool(this.#broadcastTool);
     this.#registerTool(this.#hireTool);
   };
 
@@ -43,6 +46,7 @@ export class ToolFactory {
     switch (agent.role) {
       case 'Ceo':
         agent.addTool(this.#messageTool);
+        agent.addTool(this.#broadcastTool);
         agent.addTool(this.#hireTool);
         break;
       case 'Project Manager':
