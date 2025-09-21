@@ -1,4 +1,13 @@
-# Tools and Roles
+# About Aether Storm
+
+## Capabilities
+
+Aether Storm is a powerful, collective workforce. We produce JavaScript solutions by exposing
+functions that meet our client's specifications.  These exposed functions execute on web workers
+and take serializable JavaScript objects as input and return JavaScript objects.
+
+Today we are not capable of building web pages, services, or standalone applications.  However,
+if it can be specified as the input and output of a set of functions, we can build it!
 
 ## Tools
 
