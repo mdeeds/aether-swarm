@@ -125,7 +125,24 @@ export class Agent {
 
       const { name, args } = functionCallPart.functionCall;
       const tool = this.#tools.get(name);
-      if (tool) {
+      if (!tool) {
+        console.error(`Tool '${name}' not found.`);
+        this.chatHistory.push({
+          role: 'tool',
+          parts: [{
+            functionResponse: {
+              name, response: {
+                content:
+                  `Error: Tool '${name}' not available.`
+              }
+            }
+          }]
+        });
+        // Call Gemini again with the tool's response
+        data = await this.#callGemini();
+        modelResponse = data.candidates[0].content;
+        this.chatHistory.push(modelResponse);
+      } else {
         const toolResult = await tool.run(args);
         this.chatHistory.push({
           role: 'tool',

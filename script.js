@@ -3,6 +3,7 @@ import { Agent } from './agent.js';
 import { Names } from './names.js';
 import { MessageTool } from './message-tool.js';
 import { AgentFactory } from './agent-factory.js';
+import { Hats } from './hats.js';
 
 
 /**
@@ -77,7 +78,7 @@ function createChatUI(agent) {
  * Main initialization function.
  */
 async function main() {
-  const ceo = await AgentFactory.createAgent('Ceo', 'blue');
+  const ceo = await AgentFactory.createAgent('Ceo', Hats.randomColor());
   const chatUI = createChatUI(ceo);
   document.body.appendChild(chatUI);
 }
