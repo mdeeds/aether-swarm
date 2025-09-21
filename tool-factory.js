@@ -1,7 +1,13 @@
 // @ts-check
 
 import { MessageTool } from './message-tool.js';
+import { HireTool } from './hire-tool.js';
 import { Agent } from './agent.js';
+
+/**
+ * @typedef {import('./tool.js').Tool} Tool
+ */
+
 
 export class ToolFactory {
   /** @type {Map<string, import('./tool.js').Tool>} */
@@ -9,9 +15,20 @@ export class ToolFactory {
   /** @type {Set<string>} */
   static #knownAgents = new Set();
   static #messageTool = new MessageTool();
+  static #hireTool = new HireTool();
 
-  constructor() {
+  static {
+    this.#registerTool(this.#messageTool);
+    this.#registerTool(this.#hireTool);
+  };
+
+  /**
+   * @param {Tool} tool
+   */
+  static #registerTool(tool) {
+    this.#allTools.set(tool.declaration.name, tool);
   }
+
 
   /**
    * @param {Agent} agent
@@ -21,9 +38,18 @@ export class ToolFactory {
     if (this.#knownAgents.has(agent.name)) {
       return;
     }
+    this.#messageTool.addAgent(agent.name, agent);
+    this.#knownAgents.add(agent.name);
     switch (agent.role) {
       case 'Ceo':
         agent.addTool(this.#messageTool);
+        agent.addTool(this.#hireTool);
+        break;
+      case 'Project Manager':
+        agent.addTool(this.#messageTool);
+        break;
+      case 'Coder':
+        agent.addTool(this.#messageTool)
         break;
       default:
         throw new Error(`Unknown role: ${agent.role}`);

@@ -1,6 +1,7 @@
 // @ts-check
 
 import { Agent } from './agent.js';
+import { Directory } from './directory.js';
 import { Hats } from './hats.js';
 import { Names } from './names.js';
 import { Roles } from './roles.js';
@@ -37,6 +38,7 @@ export class AgentFactory {
 
     const agent = new Agent(name, role, systemInstructions);
     ToolFactory.addToolsToNewAgent(agent);
+    Directory.addAgent(agent);
 
     return agent;
   }

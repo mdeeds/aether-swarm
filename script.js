@@ -1,7 +1,5 @@
 // @ts-check
 import { Agent } from './agent.js';
-import { Names } from './names.js';
-import { MessageTool } from './message-tool.js';
 import { AgentFactory } from './agent-factory.js';
 import { Hats } from './hats.js';
 

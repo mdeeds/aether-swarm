@@ -1,5 +1,7 @@
 // @ts-check
-import { MessageTool } from './message-tool.js';
+
+import { Directory } from './directory.js';
+
 /** @typedef {import('./tool.js').Tool} Tool */
 
 /**
@@ -15,7 +17,7 @@ export class Agent {
   /** @type {ChatMessage[]} */
   chatHistory = [];
   /** @type {string | null} */
-  #systemInstructions = null;
+  #staticSystemInstructions = null;
   /** @type {Map<string, Tool>} */
   #tools = new Map();
   /** @type {string} */
@@ -42,7 +44,7 @@ export class Agent {
     this.loadApiKey();
     this.name = name;
     this.role = role;
-    this.#systemInstructions = systemInstructions;
+    this.#staticSystemInstructions = systemInstructions;
   }
 
   /** @param {Tool} tool */
@@ -71,7 +73,7 @@ export class Agent {
     if (!this.#apiKey) {
       throw new Error('API key not loaded.');
     }
-    if (!this.#systemInstructions) {
+    if (!this.#staticSystemInstructions) {
       throw new Error('System instructions not set.');
     }
 
@@ -80,9 +82,14 @@ export class Agent {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.#apiKey}`;
 
     const toolDeclarations = Array.from(this.#tools.values()).map(tool => tool.declaration);
+    const fullSystemInstructions = `${this.#staticSystemInstructions}
+    Company Directory:
+    ${Directory.getListing()}
+    `;
+
     const body = {
       contents: this.chatHistory,
-      system_instruction: { parts: [{ text: this.#systemInstructions }] },
+      system_instruction: { parts: [{ text: fullSystemInstructions }] },
       tools: [{ function_declarations: toolDeclarations }],
     };
 
