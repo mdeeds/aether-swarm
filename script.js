@@ -58,23 +58,6 @@ function createChatUI(agent) {
   return parentDiv;
 }
 
-/**
- * 
- * @param {string} name The agent's name
- * @param {HTMLElement} chatContent The container with the messages for the agent.
- * @returns 
- */
-function makeNamedChatDiv(name, chatContent) {
-  const chatDiv = document.createElement('div');
-  chatDiv.dataset.agentName = name;
-  chatDiv.classList.add('chat');
-  const chatHeader = document.createElement('div');
-  chatHeader.classList.add('chat-header');
-  chatHeader.textContent = name;
-  chatDiv.appendChild(chatHeader);
-  chatDiv.appendChild(chatContent);
-  return chatDiv;
-}
 
 /**
  * Main initialization function.
@@ -113,14 +96,10 @@ async function main() {
   if (!chats) {
     throw new Error('Chats container not found.');
   }
-
-  const chatContent = document.createElement('div');
-  chatContent.classList.add('chat-content');
   // const color = Hats.randomColor();
   // White is really anoying for a CEO.
   const color = 'red';  // Red is by far the most fun Ceo
-  const ceo = await AgentFactory.createAgent('Ceo', color, chatContent);
-  chats.appendChild(makeNamedChatDiv(ceo.name, chatContent));
+  const ceo = await AgentFactory.createAgent('Ceo', color, chats);
   const chatUI = createChatUI(ceo);
   mainContentDiv.appendChild(chatUI);
 }
