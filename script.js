@@ -116,8 +116,9 @@ async function main() {
 
   const chatContent = document.createElement('div');
   chatContent.classList.add('chat-content');
-  const color = Hats.randomColor();
-  // const color = 'red';  // Red is by far the most fun Ceo
+  // const color = Hats.randomColor();
+  // White is really anoying for a CEO.
+  const color = 'red';  // Red is by far the most fun Ceo
   const ceo = await AgentFactory.createAgent('Ceo', color, chatContent);
   chats.appendChild(makeNamedChatDiv(ceo.name, chatContent));
   const chatUI = createChatUI(ceo);
