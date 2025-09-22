@@ -5,6 +5,8 @@
 export class Directory {
   /** @type {Agent[]} */
   static #agents = [];
+  /** @type {Map<string, Agent>} */
+  static #agentMap = new Map();
   /** @type {HTMLElement | null} */
   static #employeeListDiv = null;
 
@@ -23,7 +25,21 @@ export class Directory {
    */
   static addAgent(agent) {
     this.#agents.push(agent);
+    this.#agentMap.set(agent.name, agent);
     this.updateEmployeeListUI();
+  }
+
+  /**
+   * 
+   * @param {string} name 
+   * @returns {Agent}
+   */
+  static getAgent(name) {
+    const agent = this.#agentMap.get(name);
+    if (!agent) {
+      throw new Error(`No agent named ${name}.`);
+    }
+    return agent;
   }
 
   /**

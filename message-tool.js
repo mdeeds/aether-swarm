@@ -106,7 +106,7 @@ export class PrefixMessageTool {
   constructor(messageTool, fromAgent) {
     this.#messageTool = messageTool;
     this.#fromAgent = fromAgent;
-    this.#prefix = `${fromAgent.name}, ${fromAgent.role}: \n`;
+    this.#prefix = `${fromAgent.name}, ${fromAgent.role} says: \n`;
   }
 
   /**

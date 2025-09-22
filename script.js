@@ -4,13 +4,13 @@ import { AgentFactory } from './agent-factory.js';
 import { Directory } from './directory.js';
 import { Hats } from './hats.js';
 
+/** @type {Agent | undefined} */
+let currentAgent = undefined;
 
 /**
 * Creates the chat UI elements and returns the main container.
-* @param {Agent} agent The agent instance to interact with.
-* @returns {HTMLDivElement} The main chat container element.
 */
-function createChatUI(agent) {
+function createChatUI() {
   // The constructor already starts loading the API key.
   // We can proceed with creating the UI.
 
@@ -33,11 +33,15 @@ function createChatUI(agent) {
   const sendMessage = async () => {
     const message = inputDiv.textContent?.trim();
     if (!message) return;
+    if (!currentAgent) {
+      throw new Error('No current agent.');
+    };
 
     inputDiv.textContent = ''; // Clear input
 
     try {
-      const responseText = await agent.postMessage(message);
+      const responseText = await currentAgent.postMessage(`Client says:\n ${message}`);
+      console.log('Response:', message);
     } catch (error) {
       console.error('Error sending message:', error);
     }
@@ -61,6 +65,7 @@ function createChatUI(agent) {
 /**
  * Shows the chat window for a specific agent and hides all others.
  * @param {string | undefined} agentName The name of the agent whose chat to show.
+ * @returns {Agent | undefined} The agent that was shown.
  */
 function showAgentChat(agentName) {
   if (!agentName) return;
@@ -73,6 +78,7 @@ function showAgentChat(agentName) {
       chatElement.classList.add('hidden');
     }
   }
+  return Directory.getAgent(agentName);
 }
 
 /**
@@ -93,7 +99,7 @@ async function main() {
     const target = /** @type {HTMLElement} */ (event.target);
     if (target.classList.contains('employee-chit')) {
       const agentName = target.dataset.agentName;
-      showAgentChat(agentName);
+      currentAgent = showAgentChat(agentName);
     }
   });
 
@@ -107,13 +113,14 @@ async function main() {
   if (!chats) {
     throw new Error('Chats container not found.');
   }
+  const chatUI = createChatUI();
+  mainContentDiv.appendChild(chatUI);
+
   // const color = Hats.randomColor();
   // White is really anoying for a CEO.
   const color = 'red';  // Red is by far the most fun Ceo
   const ceo = await AgentFactory.createAgent('Ceo', color, chats);
-  const chatUI = createChatUI(ceo);
-  showAgentChat(ceo.name);
-  mainContentDiv.appendChild(chatUI);
+  currentAgent = showAgentChat(ceo.name);
 }
 
 window.addEventListener('DOMContentLoaded', main);
