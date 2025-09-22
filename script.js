@@ -1,6 +1,7 @@
 // @ts-check
 import { Agent } from './agent.js';
 import { AgentFactory } from './agent-factory.js';
+import { Directory } from './directory.js';
 import { Hats } from './hats.js';
 
 
@@ -33,15 +34,12 @@ function createChatUI(agent) {
     const message = inputDiv.textContent?.trim();
     if (!message) return;
 
-    // addMessageToChat('user', message);
     inputDiv.textContent = ''; // Clear input
 
     try {
       const responseText = await agent.postMessage(message);
-      // addMessageToChat('model', responseText);
     } catch (error) {
       console.error('Error sending message:', error);
-      // addMessageToChat('error', `Error: ${error.message}`);
     }
   };
 
@@ -53,18 +51,6 @@ function createChatUI(agent) {
     }
   });
 
-  /**
-   * @param {'user' | 'model' | 'error'} role
-   * @param {string} text
-   */
-  function addMessageToChat(role, text) {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${role}`;
-    messageDiv.textContent = text;
-    chatContainer.appendChild(messageDiv);
-    chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to bottom
-  }
-
   // The parent element will contain both the chat and input areas.
   const parentDiv = document.createElement('div');
   parentDiv.appendChild(chatContainer);
@@ -73,23 +59,69 @@ function createChatUI(agent) {
 }
 
 /**
+ * 
+ * @param {string} name The agent's name
+ * @param {HTMLElement} chatContent The container with the messages for the agent.
+ * @returns 
+ */
+function makeNamedChatDiv(name, chatContent) {
+  const chatDiv = document.createElement('div');
+  chatDiv.dataset.agentName = name;
+  chatDiv.classList.add('chat');
+  const chatHeader = document.createElement('div');
+  chatHeader.classList.add('chat-header');
+  chatHeader.textContent = name;
+  chatDiv.appendChild(chatHeader);
+  chatDiv.appendChild(chatContent);
+  return chatDiv;
+}
+
+/**
  * Main initialization function.
  */
 async function main() {
+  const contentWrapper = document.createElement('div');
+  contentWrapper.id = 'content-wrapper';
+  document.body.appendChild(contentWrapper);
+
+  // Create main layout containers
+  const employeeListDiv = document.createElement('div');
+  employeeListDiv.id = 'employee-list';
+  contentWrapper.appendChild(employeeListDiv);
+  Directory.setEmployeeListContainer(employeeListDiv);
+
+  employeeListDiv.addEventListener('click', (event) => {
+    const target = /** @type {HTMLElement} */ (event.target);
+    if (target.classList.contains('employee-chit')) {
+      const agentName = target.dataset.agentName;
+      if (agentName) {
+        const chatWindow = /** @type {HTMLElement | null} */ (
+          document.querySelector(`.chat[data-agent-name="${agentName}"]`)
+        );
+        chatWindow?.classList.toggle('hidden');
+      }
+    }
+  });
+
+  const mainContentDiv = document.createElement('div');
+  mainContentDiv.id = 'main-content';
+  contentWrapper.appendChild(mainContentDiv);
+
   const chats = document.createElement('div');
   chats.id = 'chats';
-  document.body.appendChild(chats);
+  mainContentDiv.appendChild(chats);
   if (!chats) {
     throw new Error('Chats container not found.');
   }
-  const chatHistoryDiv = document.createElement('div');
-  chats.appendChild(chatHistoryDiv);
 
-  // const color = Hats.randomColor();W
-  const color = 'red';  // Red is by far the most fun Ceo
-  const ceo = await AgentFactory.createAgent('Ceo', color, chatHistoryDiv);
+  const chatContent = document.createElement('div');
+  chatContent.classList.add('chat-content');
+  const color = Hats.randomColor();
+  // const color = 'red';  // Red is by far the most fun Ceo
+  const ceo = await AgentFactory.createAgent('Ceo', color, chatContent);
+  chats.appendChild(makeNamedChatDiv(ceo.name, chatContent));
   const chatUI = createChatUI(ceo);
-  document.body.appendChild(chatUI);
+  mainContentDiv.appendChild(chatUI);
 }
 
 window.addEventListener('DOMContentLoaded', main);

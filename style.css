@@ -1,12 +1,89 @@
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  margin: 0;
+}
+
+#content-wrapper {
+  display: flex;
+  flex-direction: row;
+  flex-grow: 1;
+  overflow: hidden;
+  /* Prevent wrapper from creating its own scrollbars */
+}
+
 div {
   border: 1px solid #ddd;
   padding: 2px;
   margin: 1px;
 }
 
+#employee-list {
+  width: 200px;
+  flex-shrink: 0;
+  /* Prevent this column from shrinking */
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-right: 10px;
+  overflow-y: auto;
+  /* Add vertical scrollbar when needed */
+}
+
+.title {
+  text-align: center;
+  margin: 10px 0;
+}
+
+.employee-chit {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 5px;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+  font-family: sans-serif;
+  font-size: 0.9em;
+}
+
 #chats {
+  flex-grow: 1;
+  overflow-y: auto;
+  /* Add vertical scrollbar when needed */
   white-space: pre-wrap;
   /* Preserves newlines and spaces */
   word-break: break-word;
   /* Breaks long words to prevent overflow */
+}
+
+/* A container for a single agent's chat history */
+.chat {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-header {
+  background-color: #f1f1f1;
+  padding: 8px 12px;
+  font-weight: bold;
+  border-bottom: 1px solid #ccc;
+}
+
+.chat-content {
+  padding: 10px;
+}
+
+#main-content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.hidden {
+  display: none;
 }

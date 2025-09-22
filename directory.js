@@ -5,6 +5,17 @@
 export class Directory {
   /** @type {Agent[]} */
   static #agents = [];
+  /** @type {HTMLElement | null} */
+  static #employeeListDiv = null;
+
+  /**
+   * Sets the HTMLElement to be used for displaying the employee list.
+   * @param {HTMLElement} element The div element for the employee list.
+   */
+  static setEmployeeListContainer(element) {
+    this.#employeeListDiv = element;
+    this.updateEmployeeListUI();
+  }
 
   /**
    * Adds an agent to the directory.
@@ -12,6 +23,23 @@ export class Directory {
    */
   static addAgent(agent) {
     this.#agents.push(agent);
+    this.updateEmployeeListUI();
+  }
+
+  /**
+   * Updates the employee list UI.
+   */
+  static updateEmployeeListUI() {
+    if (!this.#employeeListDiv) return;
+
+    this.#employeeListDiv.innerHTML = ''; // Clear existing chits
+    for (const agent of this.#agents) {
+      const chit = document.createElement('div');
+      chit.className = 'employee-chit';
+      chit.dataset.agentName = agent.name;
+      chit.textContent = `${agent.name} (${agent.role})`;
+      this.#employeeListDiv.appendChild(chit);
+    };
   }
 
   /**
