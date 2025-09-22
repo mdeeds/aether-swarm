@@ -28,6 +28,7 @@ export class AgentFactory {
     chatHeader.textContent = name;
     chatDiv.appendChild(chatHeader);
     chatDiv.appendChild(chatContent);
+    chatDiv.classList.add('hidden');
     return chatDiv;
   }
 

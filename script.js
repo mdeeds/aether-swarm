@@ -58,6 +58,22 @@ function createChatUI(agent) {
   return parentDiv;
 }
 
+/**
+ * Shows the chat window for a specific agent and hides all others.
+ * @param {string | undefined} agentName The name of the agent whose chat to show.
+ */
+function showAgentChat(agentName) {
+  if (!agentName) return;
+  const allChats = document.querySelectorAll('.chat');
+  for (const chat of allChats) {
+    const chatElement = /** @type {HTMLElement} */ (chat);
+    if (chatElement.dataset.agentName === agentName) {
+      chatElement.classList.remove('hidden');
+    } else {
+      chatElement.classList.add('hidden');
+    }
+  }
+}
 
 /**
  * Main initialization function.
@@ -77,12 +93,7 @@ async function main() {
     const target = /** @type {HTMLElement} */ (event.target);
     if (target.classList.contains('employee-chit')) {
       const agentName = target.dataset.agentName;
-      if (agentName) {
-        const chatWindow = /** @type {HTMLElement | null} */ (
-          document.querySelector(`.chat[data-agent-name="${agentName}"]`)
-        );
-        chatWindow?.classList.toggle('hidden');
-      }
+      showAgentChat(agentName);
     }
   });
 
@@ -101,6 +112,7 @@ async function main() {
   const color = 'red';  // Red is by far the most fun Ceo
   const ceo = await AgentFactory.createAgent('Ceo', color, chats);
   const chatUI = createChatUI(ceo);
+  showAgentChat(ceo.name);
   mainContentDiv.appendChild(chatUI);
 }
 

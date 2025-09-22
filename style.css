@@ -46,6 +46,8 @@ div {
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
   font-family: sans-serif;
   font-size: 0.9em;
+  cursor: pointer;
+  user-select: none;
 }
 
 #chats {
