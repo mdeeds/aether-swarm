@@ -62,8 +62,8 @@ export class MessageTool {
       return `Error: Agent with name '${name}' not found.`;
     }
     console.log(`Routing message to ${name}: "${text}"`);
-    const response = await agent.postMessage(text);
-    return response;
+    const response = await agent.postMessage('Incoming message: ' + text);
+    return `Message sent from ${fromName} to ${name}`;
   }
 }
 

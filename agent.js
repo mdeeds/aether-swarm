@@ -113,8 +113,8 @@ export class Agent {
         });
         break; // Success
       } catch (error) {
-        console.log(error);
-        console.log(`Retrying in ${delay}ms...`);
+        console.log(this.name, error);
+        console.log(this.name, `Retrying in ${delay}ms...`);
         await this.#sleep(delay);
         delay *= 2;
         --retries;

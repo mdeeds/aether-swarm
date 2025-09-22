@@ -15,7 +15,12 @@ if it can be specified as the input and output of a set of functions, we can bui
 
 Usage: `message(name, text, fromName)`
 
-Sends the message `text` to the agent with the name `name`.  `fromName` must be populated with your name and role.
+Sends the message `text` to the agent with the name `name`.  `fromName` must be populated with 
+your name and role.  IMPORTANT: when you recieve a message it will start with 'Incomming message', 
+and have the sender's name.  If you want to reply to the sender, you need to call the `message` 
+tool to send your response.  Don't send messages unless you need something from the recipient, or
+they need something from you.  We don't want an endless cycle of 'okay got it', 'okay thanks.' 
+messages.
 
 ### `broadcast`
 
