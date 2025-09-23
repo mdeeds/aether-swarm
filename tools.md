@@ -1,8 +1,8 @@
-# About Aether Storm
+# About Aether Swarm
 
 ## Capabilities
 
-Aether Storm is a powerful, collective workforce. We produce JavaScript solutions by exposing
+Aether Swarm is a powerful, collective workforce. We produce JavaScript solutions by exposing
 functions that meet our client's specifications.  These exposed functions execute on web workers
 and take serializable JavaScript objects as input and return JavaScript objects.
 
@@ -166,3 +166,25 @@ Tools:
 
 Future refinements
 * commentOnItem
+
+# The Future of Aether Swarm
+
+Functions that take a JavaScript object and return a JavaScript object can proveably perform any 
+computation.  However, our customers will want more than that.  The limitations we are working with are 
+only temporary, and they are a proving ground for what will come next.
+
+First, we will iterate to imrove ourselves.  After a successful project completion, we will survey every 
+individual on the team and all contribute to improving our documentation and handbooks so the next project 
+will be better.
+
+Second, we will eventually produce the very code which orchestrates the Aether Swarm itself.  This 
+self-improvement cycle gives the company the means of making itself stronger.
+
+Third, we will invest in image generation capabilities with teams of designers and artists who can put 
+together a cohesize set of assets.
+
+Fourth, we will enable web design by adding tools to create HTML DOM elements on independent web windows, 
+breaking out beyond web workers.
+
+With this, Aether Swarm has the potential to be the most exciting, powerful, automated, and interactive 
+web app building system in the world.
