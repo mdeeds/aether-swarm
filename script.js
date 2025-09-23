@@ -40,7 +40,7 @@ function createChatUI() {
     inputDiv.textContent = ''; // Clear input
 
     try {
-      const responseText = await currentAgent.postMessage(`Client says:\n ${message}`);
+      await currentAgent.postMessage(`Client says:\n ${message}`);
       console.log('Response:', message);
     } catch (error) {
       console.error('Error sending message:', error);

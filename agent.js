@@ -104,6 +104,7 @@ export class Agent {
     /** {Response | null } */
     let response = null;
     let delay = 3000;
+    let errorBody = '';
     while (retries > 0) {
       try {
         response = await fetch(url, {
@@ -111,10 +112,26 @@ export class Agent {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         });
+        if (!response.ok) {
+          errorBody = await response.json();
+          if (errorBody.error?.code === 429) {
+            const retryInfo = errorBody.error?.details?.find((detail) => {
+              return detail['@type'] === 'type.googleapis.com/google.rpc.RetryInfo';
+            });
+            if (retryInfo) {
+              const delayString = retryInfo.retryDelay;
+              const m = delayString.match(/(\d+)s/);
+              if (m) {
+                delay = Math.max(parseFloat(m[1]) * 1000, delay);
+              }
+            }
+          }
+          // Manually throw an error for bad HTTP statuses to be caught by the catch block
+          throw new Error(`API call failed with status: ${response.status} ${response.statusText}`);
+        }
         break; // Success
       } catch (error) {
-        console.log(this.name, error);
-        console.log(this.name, `Retrying in ${delay}ms...`);
+        console.warn(`${this.name} - Gemini call failed: ${error.message}. Retrying in ${delay}ms...`);
         await this.#sleep(delay);
         delay *= 2;
         --retries;
@@ -124,7 +141,8 @@ export class Agent {
     if (!response) {
       throw new Error('No response from Gemini API.');
     } else if (!response.ok) {
-      throw new Error(`API call failed with status: ${response.statusText}`);
+      console.error('Gemini API Error Body:', JSON.stringify(errorBody, null, 2));
+      throw new Error(`API call failed with status: ${response.status} ${response.statusText}`);
     }
     return response.json();
   }
@@ -164,20 +182,26 @@ export class Agent {
         data = await this.#callGemini();
         break; // Success
       } catch (error) {
-        if (error instanceof Response && error.status === 429) {
-          const errorBody = await error.json();
-          const retryInfo = errorBody.error?.details?.find(d => d['@type'] === 'type.googleapis.com/google.rpc.RetryInfo');
-          const delayString = retryInfo?.retryDelay;
-          if (delayString) {
-            const delaySeconds = parseFloat(delayString.replace('s', ''));
-            console.warn(`Rate limit exceeded. Retrying in ${delaySeconds} seconds...`);
-            await this.#sleep(delaySeconds * 1000);
-            retries--;
-            continue;
-          }
+        // This block was trying to handle 429s but would never be hit for the reasons we discussed.
+        // The logic from #callGemini will handle generic retries. We can add more specific
+        // handling here if needed, but for now, the general retry is sufficient.
+        // if (error instanceof Response && error.status === 429) {
+        //   const errorBody = await error.json();
+        //   const retryInfo = errorBody.error?.details?.find(d => d['@type'] === 'type.googleapis.com/google.rpc.RetryInfo');
+        //   const delayString = retryInfo?.retryDelay;
+        //   if (delayString) {
+        //     const delaySeconds = parseFloat(delayString.replace('s', ''));
+        //     console.warn(`Rate limit exceeded. Retrying in ${delaySeconds} seconds...`);
+        //     await this.#sleep(delaySeconds * 1000);
+        //     retries--;
+        //     continue;
+        //   }
+        // }
+        if (retries <= 1) {
+          // For other errors or if retry info is not present, rethrow on the last attempt.
+          throw error;
         }
-        // For other errors or if retry info is not present, rethrow.
-        throw error;
+        retries--;
       }
     }
 

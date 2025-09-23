@@ -61,8 +61,8 @@ export class MessageTool {
     if (!agent) {
       return `Error: Agent with name '${name}' not found.`;
     }
-    console.log(`Routing message to ${name}: "${text}"`);
-    const response = await agent.postMessage('Incoming message: ' + text);
+    console.warn(`Anonymous message from ${fromName} to ${name}: "${text}"`);
+    await agent.postMessage('Incoming message: ' + text);
     return `Message sent from ${fromName} to ${name}`;
   }
 }
@@ -131,9 +131,9 @@ export class PrefixMessageTool {
     if (agent.name == this.#fromAgent.name) {
       return `Not sending message to self.  To and from are both ${this.#fromAgent.name}.}`;
     }
-    console.log(`Routing message to ${name}: "${text}"`);
-    const response = await agent.postMessage(this.#prefix + "\n" + text);
-    return response;
+    console.log(`Message from ${this.#fromAgent.name} to ${name}: "${text}"`);
+    await agent.postMessage(this.#prefix + "\n" + text);
+    return `Message sent from ${this.#fromAgent.name} to ${name}`;
   }
 
 }

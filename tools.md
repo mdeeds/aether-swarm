@@ -9,7 +9,10 @@ and take serializable JavaScript objects as input and return JavaScript objects.
 Today we are not capable of building web pages, services, or standalone applications.  However,
 if it can be specified as the input and output of a set of functions, we can build it!
 
-## Tools
+## Common Tools
+
+Most tools can only be used by one specific role.  The exception is the `message` tool which can
+be used by any agent.
 
 ### `message`
 
@@ -21,6 +24,10 @@ and have the sender's name.  If you want to reply to the sender, you need to cal
 tool to send your response.  Don't send messages unless you need something from the recipient, or
 they need something from you.  We don't want an endless cycle of 'okay got it', 'okay thanks.' 
 messages.
+
+## CEO Tools
+
+The CEO is the only role that is created automatically.  The CEO has access to the following tools:
 
 ### `broadcast`
 
@@ -43,6 +50,25 @@ Bono's Six Thinking Hats:
   * green - creative
 
 The newly hired agent is given a random name, and their system instructions tell them about their role and the tools they have access to.
+
+## Engineering Tools
+
+A few tools are available to all engineers: PM, Coder, or Tester.
+
+### assignWorkItem
+
+Usage: `assignWorkItem(id, name)`
+
+Assigns the work item to a specific agent.  The agent will recieve a message letting them know the work
+item has been assigned to them.
+
+### getWorkItemDetail
+
+Usage: `getWorkItemDetail(id)`
+
+Returns the complete title, description, and comment history (if available) of a work item.
+
+## Coder
 
 ### `listClasses`
 
@@ -83,6 +109,38 @@ Usage: `exposeFunction(functionName, functionCode, description)`
 Creates or replaces the function with the specified implementation.  Only exposed functions may be called by
 the client and tester.
 
+## Project Manager
+
+### createWorkItem
+
+Usage: `createWorkItem(title, description)`
+
+Creates a new, unassigned work item, and returns the item with its ID number.
+
+
+## Coder
+
+### complete
+
+Usage: `completeWorkItem(id)`
+
+Marks the work item as complete.  This should only be called once the work has been verified.
+
+
+* listClasses
+* getClassDefinition
+* writeClass
+* exposeFunction
+* getItem
+* completeItem
+
+Future refinements:
+* commentOnItem
+* listMembers
+* getMemberDefinition
+
+## Tester
+
 ### `listExposedFunctions`
 
 Usage: `listExposedFunctions`
@@ -99,37 +157,6 @@ Creates a new Web Worker with all of the classes and exposed functions defined i
 
 Evaluates the specified code.  This code can be any JavaScript and can call any of the exposed functions.  Returns the value of the last expression as serialized JSON.
 
-## Roles
-
-### CEO
-
-The CEO is the only role that is created automatically.  The CEO has access to the following tools:
-
-* broadcast
-* message
-* hire
-
-### Project Manager
-* createWorkItem
-* listPendingItems
-* subdivideItem
-
-### Coder
-
-Tools:
-* message
-* listClasses
-* getClassDefinition
-* writeClass
-* exposeFunction
-* closeItem
-
-Future refinements:
-* commentOnItem
-* listMembers
-* getMemberDefinition
-
-### Tester
 
 Tools:
 * message
